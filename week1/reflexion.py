@@ -15,7 +15,10 @@ Keep the implementation minimal.
 """
 
 # TODO: Fill this in!
-YOUR_REFLEXION_PROMPT = ""
+YOUR_REFLEXION_PROMPT = """
+You are a Python debugging expert. 
+Your task is to fix the `is_valid_password` function based on the provided test failures.
+"""
 
 
 # Ground-truth test suite used to evaluate generated code
@@ -96,7 +99,16 @@ def your_build_reflexion_context(prev_code: str, failures: List[str]) -> str:
 
     Return a string that will be sent as the user content alongside the reflexion system prompt.
     """
-    return ""
+    if failures is None:
+        failures = []
+
+    failures_str = "\n".join(f"- {f}" for f in failures if f)
+    
+    if not failures_str:
+        failures_str = "Unknown failure."
+
+    context = f"Here is the previous implementation of the function `is_valid_password` that failed the tests:{failures_str}"
+    return context
 
 
 def apply_reflexion(
