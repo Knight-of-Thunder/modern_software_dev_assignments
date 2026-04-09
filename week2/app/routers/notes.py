@@ -5,13 +5,14 @@ from typing import Any, Dict, List
 from fastapi import APIRouter, HTTPException
 
 from .. import db
+from ..schemas import NoteOut
 
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 
 
-@router.post("")
-def create_note(payload: Dict[str, Any]) -> Dict[str, Any]:
+@router.post("", response_model=NoteOut)
+def create_note(payload: Dict[str, Any]) -> NoteOut:
     content = str(payload.get("content", "")).strip()
     if not content:
         raise HTTPException(status_code=400, detail="content is required")
@@ -24,8 +25,8 @@ def create_note(payload: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-@router.get("/{note_id}")
-def get_single_note(note_id: int) -> Dict[str, Any]:
+@router.get("/{note_id}", response_model=NoteOut)
+def get_single_note(note_id: int) -> NoteOut:
     row = db.get_note(note_id)
     if row is None:
         raise HTTPException(status_code=404, detail="note not found")
