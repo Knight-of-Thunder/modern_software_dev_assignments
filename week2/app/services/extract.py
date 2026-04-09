@@ -105,7 +105,7 @@ def extract_action_items_llm(text: str) -> ActionItemList:
         return ActionItemList(action_items=[])
 
     response = chat(
-        model="llama3.1",
+        model= os.getenv("OLLAMA_MODEL", "llama3.1:8b"), # default to llama3.1:8b if not set
         messages=[
             {
                 "role": "system",
