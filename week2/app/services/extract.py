@@ -7,6 +7,7 @@ import json
 from typing import Any
 from ollama import chat
 from dotenv import load_dotenv
+from pydantic import BaseModel, ValidationError
 
 load_dotenv()
 
@@ -16,6 +17,16 @@ KEYWORD_PREFIXES = (
     "action:",
     "next:",
 )
+
+
+class ActionItem(BaseModel):
+    task: str
+    assignee: str | None = None
+    priority: str | None = None
+
+
+class ActionItemList(BaseModel):
+    action_items: list[ActionItem]
 
 
 def _is_action_line(line: str) -> bool:
@@ -87,3 +98,43 @@ def _looks_imperative(sentence: str) -> bool:
         "investigate",
     }
     return first.lower() in imperative_starters
+
+
+def extract_action_items_llm(text: str) -> ActionItemList:
+    if not text.strip():
+        return ActionItemList(action_items=[])
+
+    response = chat(
+        model="llama3.1",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "Extract actionable tasks from the given text. "
+                    "Return strictly valid JSON that matches the provided schema. "
+                    "Use null for unknown assignee or priority. "
+                    "Keep task concise and specific."
+                ),
+            },
+            {
+                "role": "user",
+                "content": text,
+            },
+        ],
+        format=ActionItemList.model_json_schema(),
+    )
+
+    content = (response.message.content or "").strip()
+    try:
+        return ActionItemList.model_validate_json(content)
+    except ValidationError:
+        # Try to recover when extra prose wraps JSON.
+        match = re.search(r"\{[\s\S]*\}", content)
+        if match:
+            try:
+                return ActionItemList.model_validate_json(match.group(0))
+            except ValidationError:
+                pass
+            except json.JSONDecodeError:
+                pass
+        return ActionItemList(action_items=[])
