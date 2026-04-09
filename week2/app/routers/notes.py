@@ -11,6 +11,19 @@ from ..schemas import NoteOut
 router = APIRouter(prefix="/notes", tags=["notes"])
 
 
+@router.get("", response_model=list[NoteOut])
+def list_all_notes() -> List[NoteOut]:
+    rows = db.list_notes()
+    return [
+        {
+            "id": row["id"],
+            "content": row["content"],
+            "created_at": row["created_at"],
+        }
+        for row in rows
+    ]
+
+
 @router.post("", response_model=NoteOut)
 def create_note(payload: Dict[str, Any]) -> NoteOut:
     content = str(payload.get("content", "")).strip()
