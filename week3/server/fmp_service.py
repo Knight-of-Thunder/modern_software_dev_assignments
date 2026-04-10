@@ -89,7 +89,9 @@ class FMPService:
             "price": quote.get("price"),
             "day_high": quote.get("dayHigh"),
             "day_low": quote.get("dayLow"),
-            "change_percent": quote.get("changesPercentage"),
+            "change_percent": quote.get("changesPercentage")
+            if quote.get("changesPercentage") is not None
+            else quote.get("changePercentage"),
             "timestamp": quote.get("timestamp"),
         }
 
@@ -103,7 +105,9 @@ class FMPService:
         return {
             "ticker": symbol,
             "company_name": profile.get("companyName"),
-            "market_cap": profile.get("mktCap"),
+            "market_cap": profile.get("marketCap")
+            if profile.get("marketCap") is not None
+            else profile.get("mktCap"),
             "pe_ratio": profile.get("pe"),
             "eps": profile.get("eps"),
             "industry": profile.get("industry"),
